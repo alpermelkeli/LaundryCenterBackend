@@ -1,4 +1,4 @@
-package org.alpermelkeli;
+package org.alpermelkeli.MQTT;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -9,8 +9,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import java.nio.charset.StandardCharsets;
 
 public class MQTTController {
-    private final String mqttBroker = "tcp://34.69.200.78:1883";
-    private final String clientId = "SpringBootClient";
+    private static final String mqttBroker = "tcp://35.239.219.113:1883";
+    private static final String clientId = "SpringBootClient";
     private MqttClient mqttClient;
 
     public MQTTController(){
