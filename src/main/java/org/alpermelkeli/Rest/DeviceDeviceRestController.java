@@ -7,6 +7,7 @@ import org.alpermelkeli.model.Machine;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +50,7 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
     }
 
     @Override
-    public List<Device> getDevices(){
+    public Map<String, List<Device>> getDevices(){
         return firebaseFirestoreService.getDevices();
     }
 

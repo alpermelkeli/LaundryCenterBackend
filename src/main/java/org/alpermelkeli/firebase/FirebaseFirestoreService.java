@@ -7,9 +7,12 @@ import com.google.cloud.firestore.QuerySnapshot;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
 import org.alpermelkeli.model.State;
+import org.alpermelkeli.model.User;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -17,14 +20,21 @@ public class FirebaseFirestoreService {
 
     private final Firestore firestore = FirebaseInitializer.getFirestore();
 
-    public List<Device> getDevices() {
-        List<Device> devices = new ArrayList<>();
+    public User getUser(){
+        return null;
+    }
+
+    public Map<String, List<Device>> getDevices() {
+        Map<String, List<Device>> devicesByCompany = new HashMap<>();
 
         try {
             ApiFuture<QuerySnapshot> companyFuture = firestore.collection("Company").get();
             QuerySnapshot companySnapshot = companyFuture.get();
 
             for (DocumentSnapshot companyDoc : companySnapshot.getDocuments()) {
+                String companyName = companyDoc.getId();
+                List<Device> devices = new ArrayList<>();
+
                 ApiFuture<QuerySnapshot> devicesFuture = companyDoc.getReference().collection("Devices").get();
                 QuerySnapshot deviceSnapshot = devicesFuture.get();
 
@@ -54,13 +64,16 @@ public class FirebaseFirestoreService {
 
                     devices.add(device);
                 }
+
+                devicesByCompany.put(companyName, devices);
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
-        return devices;
+        return devicesByCompany;
     }
+
     public List<Device> getDevicesByCompany(String companyId) {
         List<Device> devices = new ArrayList<>();
 
