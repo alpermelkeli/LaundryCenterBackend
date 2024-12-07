@@ -1,7 +1,7 @@
 package org.alpermelkeli.Rest;
 
 import org.alpermelkeli.MQTT.MQTTController;
-import org.alpermelkeli.firebase.FirebaseController;
+import org.alpermelkeli.firebase.FirebaseFirestoreService;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
 import org.springframework.web.bind.annotation.*;
@@ -14,14 +14,14 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/devices")
-class DeviceRestController implements RestApiInterface{
+class DeviceDeviceRestController implements DeviceRestApiInterface {
 
     private MQTTController mqttController;
-    private FirebaseController firebaseController;
+    private FirebaseFirestoreService firebaseFirestoreService;
 
-    public DeviceRestController() {
+    public DeviceDeviceRestController() {
         mqttController = new MQTTController();
-        firebaseController = new FirebaseController();
+        firebaseFirestoreService = new FirebaseFirestoreService();
     }
 
     @Override
@@ -50,17 +50,17 @@ class DeviceRestController implements RestApiInterface{
 
     @Override
     public List<Device> getDevices(){
-        return firebaseController.getDevices();
+        return firebaseFirestoreService.getDevices();
     }
 
     @Override
     public List<Device> getDevicesByCompany(@PathVariable String companyId){
-        return firebaseController.getDevicesByCompany(companyId);
+        return firebaseFirestoreService.getDevicesByCompany(companyId);
     }
 
     @Override
     public Machine getMachine(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId) {
-        return firebaseController.getMachine(companyId, deviceId, machineId);
+        return firebaseFirestoreService.getMachine(companyId, deviceId, machineId);
     }
 
     @Override

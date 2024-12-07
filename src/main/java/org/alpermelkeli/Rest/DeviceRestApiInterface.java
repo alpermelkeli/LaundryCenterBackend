@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 
-public interface RestApiInterface {
+public interface DeviceRestApiInterface {
     @GetMapping("/{deviceId}/turnOn")
     public String turnOnRelay(@PathVariable String deviceId, @RequestParam String RelayNo);
 

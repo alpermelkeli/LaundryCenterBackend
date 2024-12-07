@@ -7,12 +7,15 @@ import com.google.cloud.firestore.QuerySnapshot;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
 import org.alpermelkeli.model.State;
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class FirebaseController {
-    private final Firestore firestore = FirestoreInitializer.getFirestore();;
+@Service
+public class FirebaseFirestoreService {
+
+    private final Firestore firestore = FirebaseInitializer.getFirestore();
 
     public List<Device> getDevices() {
         List<Device> devices = new ArrayList<>();
@@ -97,7 +100,6 @@ public class FirebaseController {
 
         return devices;
     }
-
     public Machine getMachine(String companyId, String deviceId, String machineId){
         try {
             ApiFuture<DocumentSnapshot> companyDoc = firestore.collection("Company")
@@ -129,6 +131,7 @@ public class FirebaseController {
             return null;
         }
     }
+
 }
 
 
