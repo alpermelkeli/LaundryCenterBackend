@@ -1,23 +1,31 @@
 package org.alpermelkeli.MQTT;
 
+import org.alpermelkeli.firebase.FirebaseFirestoreService;
+import org.alpermelkeli.util.ConfigUtil;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 
-public class MQTTController {
-    private static final String mqttBroker = "tcp://35.239.219.113:1883";
+@Service
+public class MQTTControllerService {
+    private final FirebaseFirestoreService firebaseFirestoreService;
+    private static final String mqttBroker = ConfigUtil.getProperty("BROKER_ADDRESS");
     private static final String clientId = "SpringBootClient";
     private MqttClient mqttClient;
 
-    public MQTTController(){
+    public MQTTControllerService(FirebaseFirestoreService firebaseFirestoreService){
+        this.firebaseFirestoreService = firebaseFirestoreService;
 
         setup();
 
-        startSubscription();
+        listenMessages();
+
+        checkStatus(this::refreshStatus);
 
     }
 
@@ -40,7 +48,7 @@ public class MQTTController {
         }
     }
 
-    private void startSubscription(){
+    private void listenMessages(){
         try {
             mqttClient.subscribe("devices/#", (topic, message) -> {
                 String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
@@ -50,6 +58,23 @@ public class MQTTController {
         } catch (MqttException e) {
             throw new RuntimeException("MQTT connection failed!", e);
         }
+    }
+
+    private void checkStatus(RefreshStatusCallback callback){
+        try {
+            mqttClient.subscribe("devices/+/status", (topic, message) -> {
+                String deviceId = topic.split("/")[1];
+                boolean isActive = new String(message.getPayload(), StandardCharsets.UTF_8).equals("connected");
+                callback.onStatusReceived(new Status(deviceId, isActive));
+            });
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void refreshStatus(Status status){
+        firebaseFirestoreService.refreshDeviceStatus(status.deviceId, status.active);
     }
 
     public String sendCommand(String deviceId, String relayNo, String command) {
@@ -62,4 +87,18 @@ public class MQTTController {
             return "Failed to send command: " + e.getMessage();
         }
     }
+
+    private interface RefreshStatusCallback{
+        void onStatusReceived(Status status);
+    }
+
+    private static class Status{
+        String deviceId;
+        boolean active;
+        public Status(String deviceId, boolean active) {
+            this.deviceId = deviceId;
+            this.active = active;
+        }
+    }
 }
+

@@ -1,9 +1,7 @@
 package org.alpermelkeli.firebase;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
 import org.alpermelkeli.model.State;
@@ -113,6 +111,7 @@ public class FirebaseFirestoreService {
 
         return devices;
     }
+
     public Machine getMachine(String companyId, String deviceId, String machineId){
         try {
             ApiFuture<DocumentSnapshot> companyDoc = firestore.collection("Company")
@@ -145,6 +144,31 @@ public class FirebaseFirestoreService {
         }
     }
 
+    public void refreshDeviceStatus(String deviceId, boolean active){
+        try {
+            ApiFuture<QuerySnapshot> companiesFuture = firestore.collection("Company").get();
+            List<QueryDocumentSnapshot> companyDocuments = companiesFuture.get().getDocuments();
+            for (QueryDocumentSnapshot companyDoc : companyDocuments) {
+                CollectionReference devicesCollection = companyDoc.getReference().collection("Devices");
+                ApiFuture<QuerySnapshot> devicesFuture = devicesCollection.get();
+                List<QueryDocumentSnapshot> deviceDocuments = devicesFuture.get().getDocuments();
+
+                for (QueryDocumentSnapshot deviceDoc : deviceDocuments) {
+                    if (deviceDoc.getId().equals(deviceId)) {
+                        String status = active ? "connected" : "disconnected";
+                        ApiFuture<WriteResult> updateFuture = deviceDoc.getReference().update("status", status);
+
+                        System.out.println("Device " + deviceId + " status updated to: " + status);
+                        updateFuture.get();
+                        return;
+                    }
+                }
+            }
+            System.out.println("Device with ID " + deviceId + " not found.");
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Error updating device status: " + e.getMessage());
+        }
+    }
 }
 
 

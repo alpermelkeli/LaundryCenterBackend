@@ -1,6 +1,6 @@
 package org.alpermelkeli.Rest;
 
-import org.alpermelkeli.MQTT.MQTTController;
+import org.alpermelkeli.MQTT.MQTTControllerService;
 import org.alpermelkeli.firebase.FirebaseFirestoreService;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
@@ -17,22 +17,22 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/api/devices")
 class DeviceDeviceRestController implements DeviceRestApiInterface {
 
-    private MQTTController mqttController;
-    private FirebaseFirestoreService firebaseFirestoreService;
+    private final MQTTControllerService mqttControllerService;
+    private final FirebaseFirestoreService firebaseFirestoreService;
 
-    public DeviceDeviceRestController() {
-        mqttController = new MQTTController();
-        firebaseFirestoreService = new FirebaseFirestoreService();
+    public DeviceDeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService) {
+        this.firebaseFirestoreService = firebaseFirestoreService;
+        this.mqttControllerService = mqttControllerService;
     }
 
     @Override
     public String turnOnRelay(@PathVariable String deviceId, @RequestParam String RelayNo) {
-        return mqttController.sendCommand(deviceId, RelayNo, "ON");
+        return mqttControllerService.sendCommand(deviceId, RelayNo, "ON");
     }
 
     @Override
     public String turnOffRelay(@PathVariable String deviceId, @RequestParam String RelayNo) {
-        return mqttController.sendCommand(deviceId, RelayNo, "OFF");
+        return mqttControllerService.sendCommand(deviceId, RelayNo, "OFF");
     }
 
     @Override
@@ -41,7 +41,7 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
         for (int i = 1; i < 5; i++) {
             int relayNumber = i;
-            scheduler.schedule(() -> mqttController.sendCommand(deviceId, String.valueOf(relayNumber), "OFF"),
+            scheduler.schedule(() -> mqttControllerService.sendCommand(deviceId, String.valueOf(relayNumber), "OFF"),
                     i, TimeUnit.SECONDS);
         }
         scheduler.shutdown();
