@@ -10,6 +10,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Service
 public class MQTTControllerService {
@@ -17,6 +19,8 @@ public class MQTTControllerService {
     private static final String mqttBroker = ConfigUtil.getProperty("BROKER_ADDRESS");
     private static final String clientId = "SpringBootClient";
     private MqttClient mqttClient;
+    private final Timer reconnectTimer = new Timer(true);
+
 
     public MQTTControllerService(FirebaseFirestoreService firebaseFirestoreService){
         this.firebaseFirestoreService = firebaseFirestoreService;
@@ -25,27 +29,58 @@ public class MQTTControllerService {
 
         listenMessages();
 
-        checkStatus(this::refreshStatus);
+        checkDeviceStatus(this::refreshDeviceStatus);
 
+        startReconnectTask();
     }
 
-    private void setup(){
+    private void setup() {
         try {
             mqttClient = new MqttClient(mqttBroker, clientId, new MemoryPersistence());
+            connect();
+        } catch (MqttException e) {
+            throw new RuntimeException("MQTT client setup failed!", e);
+        }
+    }
 
+    private void connect() {
+        try {
             MqttConnectOptions options = new MqttConnectOptions();
-
             options.setCleanSession(true);
-
             options.setConnectionTimeout(10);
-
             options.setKeepAliveInterval(20);
 
             mqttClient.connect(options);
 
+            System.out.println("MQTT connection established!");
+
         } catch (MqttException e) {
-            throw new RuntimeException("MQTT connection failed!", e);
+            System.err.println("MQTT connection failed: " + e.getMessage());
         }
+    }
+
+    private void startReconnectTask() {
+        reconnectTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (!mqttClient.isConnected()) {
+                    System.out.println("MQTT connection lost. Attempting to reconnect...");
+                    connect();
+                    if (mqttClient.isConnected()) {
+                        try {
+                            listenMessages();
+                            checkDeviceStatus(MQTTControllerService.this::refreshDeviceStatus);
+                            System.out.println("Reconnected to MQTT broker.");
+                        } catch (Exception e) {
+                            System.err.println("Error resubscribing to topics: " + e.getMessage());
+                        }
+                    }
+                }
+                else{
+                    System.out.println("Connected...");
+                }
+            }
+        }, 0, 20000);
     }
 
     private void listenMessages(){
@@ -60,7 +95,7 @@ public class MQTTControllerService {
         }
     }
 
-    private void checkStatus(RefreshStatusCallback callback){
+    private void checkDeviceStatus(RefreshStatusCallback callback){
         try {
             mqttClient.subscribe("devices/+/status", (topic, message) -> {
                 String deviceId = topic.split("/")[1];
@@ -73,11 +108,11 @@ public class MQTTControllerService {
         }
     }
 
-    private void refreshStatus(Status status){
+    private void refreshDeviceStatus(Status status){
         firebaseFirestoreService.refreshDeviceStatus(status.deviceId, status.active);
     }
 
-    public String sendCommand(String deviceId, String relayNo, String command) {
+    public String sendTurnOnOffCommand(String deviceId, String relayNo, String command) {
         try {
             String topic = "devices/" + deviceId + "/commands";
             String message = command + " " + relayNo;

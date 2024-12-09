@@ -19,7 +19,7 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
     private final MQTTControllerService mqttControllerService;
     private final FirebaseFirestoreService firebaseFirestoreService;
-
+    /*Service injections */
     public DeviceDeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService) {
         this.firebaseFirestoreService = firebaseFirestoreService;
         this.mqttControllerService = mqttControllerService;
@@ -27,12 +27,12 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
     @Override
     public String turnOnRelay(@PathVariable String deviceId, @RequestParam String RelayNo) {
-        return mqttControllerService.sendCommand(deviceId, RelayNo, "ON");
+        return mqttControllerService.sendTurnOnOffCommand(deviceId, RelayNo, "ON");
     }
 
     @Override
     public String turnOffRelay(@PathVariable String deviceId, @RequestParam String RelayNo) {
-        return mqttControllerService.sendCommand(deviceId, RelayNo, "OFF");
+        return mqttControllerService.sendTurnOnOffCommand(deviceId, RelayNo, "OFF");
     }
 
     @Override
@@ -41,7 +41,7 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
         for (int i = 1; i < 5; i++) {
             int relayNumber = i;
-            scheduler.schedule(() -> mqttControllerService.sendCommand(deviceId, String.valueOf(relayNumber), "OFF"),
+            scheduler.schedule(() -> mqttControllerService.sendTurnOnOffCommand(deviceId, String.valueOf(relayNumber), "OFF"),
                     i, TimeUnit.SECONDS);
         }
         scheduler.shutdown();
@@ -62,11 +62,6 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
     @Override
     public Machine getMachine(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId) {
         return firebaseFirestoreService.getMachine(companyId, deviceId, machineId);
-    }
-
-    @Override
-    public String setDeviceConnected(String deviceId) {
-        return "";
     }
 
 

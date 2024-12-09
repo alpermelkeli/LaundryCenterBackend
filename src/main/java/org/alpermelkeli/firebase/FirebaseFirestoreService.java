@@ -40,8 +40,8 @@ public class FirebaseFirestoreService {
                     Device device = new Device();
                     device.setId(deviceDoc.getId());
 
-                    String stateValue = deviceDoc.getString("state");
-                    device.setState(stateValue != null && stateValue.equalsIgnoreCase("CONNECTED")
+                    String stateValue = deviceDoc.getString("status");
+                    device.setState(stateValue != null && stateValue.equalsIgnoreCase("connected")
                             ? State.CONNECTED
                             : State.DISCONNECTED);
 

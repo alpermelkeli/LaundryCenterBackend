@@ -28,6 +28,4 @@ public interface DeviceRestApiInterface {
     @GetMapping("/getMachine")
     Machine getMachine(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId);
 
-    @GetMapping("/{deviceId}/setConnected")
-    String setDeviceConnected(@PathVariable String deviceId);
 }
