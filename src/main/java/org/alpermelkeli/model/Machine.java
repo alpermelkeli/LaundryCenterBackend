@@ -5,9 +5,11 @@ public class Machine {
     private String id;
     private Long start;
     private Long time;
+    private String name;
 
-    public Machine(boolean active, String id, Long start, Long time) {
+    public Machine(boolean active, String id, String name , Long start, Long time) {
         this.active = active;
+        this.name = name;
         this.id = id;
         this.start = start;
         this.time = time;
@@ -43,5 +45,11 @@ public class Machine {
 
     public void setTime(Long time) {
         this.time = time;
+    }
+    public String getName(){
+        return name;
+    }
+    public void setName(String name){
+        this.name = name;
     }
 }

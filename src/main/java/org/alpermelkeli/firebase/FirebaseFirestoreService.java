@@ -53,6 +53,7 @@ public class FirebaseFirestoreService {
                         Machine machine = new Machine(
                                 machineDoc.getBoolean("active"),
                                 machineDoc.getId(),
+                                machineDoc.getString("name"),
                                 machineDoc.getLong("start"),
                                 machineDoc.getLong("time")
                         );
@@ -84,7 +85,7 @@ public class FirebaseFirestoreService {
                     device.setId(deviceDoc.getId());
 
                     String stateValue = deviceDoc.getString("state");
-                    device.setState(stateValue != null && stateValue.equalsIgnoreCase("CONNECTED")
+                    device.setState(stateValue != null && stateValue.equalsIgnoreCase("connected")
                             ? State.CONNECTED
                             : State.DISCONNECTED);
 
@@ -96,6 +97,7 @@ public class FirebaseFirestoreService {
                         Machine machine = new Machine(
                                 machineDoc.getBoolean("active"),
                                 machineDoc.getId(),
+                                machineDoc.getString("name"),
                                 machineDoc.getLong("start"),
                                 machineDoc.getLong("time")
                         );
@@ -128,6 +130,7 @@ public class FirebaseFirestoreService {
                 Machine machine = new Machine(
                         document.getBoolean("active"),
                         document.getId(),
+                        document.getString("name"),
                         document.getLong("start"),
                         document.getLong("time")
                 );
@@ -168,6 +171,29 @@ public class FirebaseFirestoreService {
         } catch (InterruptedException | ExecutionException e) {
             System.err.println("Error updating device status: " + e.getMessage());
         }
+    }
+
+    public void refreshMachineStatus(String companyId, String deviceId, String relayNo, boolean active){
+        DocumentReference machineRef = firestore
+                .collection("Company")
+                .document(companyId)
+                .collection("Devices")
+                .document(deviceId)
+                .collection("Machines")
+                .document(relayNo);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("active", active);
+
+        ApiFuture<WriteResult> writeResult = machineRef.update(updates);
+
+        try {
+            System.out.println("Güncelleme zamanı: " + writeResult.get().getUpdateTime());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Güncelleme sırasında hata oluştu: " + e.getMessage());
+        }
+
     }
 }
 
