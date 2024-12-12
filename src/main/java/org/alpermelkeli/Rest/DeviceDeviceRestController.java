@@ -69,5 +69,10 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
         return firebaseFirestoreService.getMachine(companyId, deviceId, machineId);
     }
 
+    @Override
+    public String increaseMachineTime(String companyId, String deviceId, String machineId, String time) {
+        return firebaseFirestoreService.increaseMachineTime(companyId, deviceId, machineId, Integer.parseInt(time));
+    }
+
 
 }

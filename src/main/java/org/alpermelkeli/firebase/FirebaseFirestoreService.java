@@ -195,6 +195,66 @@ public class FirebaseFirestoreService {
         }
 
     }
+
+    public Map<String, Double> getUserBalance(String userId) {
+        DocumentReference userRef = firestore
+                .collection("Users")
+                .document(userId);
+        Map<String, Double> result = new HashMap<>();
+        ApiFuture<DocumentSnapshot> userDoc = userRef.get();
+        try {
+            DocumentSnapshot document = userDoc.get();
+
+            if (document.exists()) {
+                if (document.contains("balance")) {
+                    Double balance = document.getDouble("balance");
+                    result.put("balance", balance);
+                } else {
+                    System.out.println("Balance alanı bulunamadı.");
+                }
+            } else {
+                System.out.println("Kullanıcı bulunamadı.");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public String increaseMachineTime(String companyId, String deviceId, String machineId, int time) {
+
+        DocumentReference machineRef = firestore.collection("Company")
+                .document(companyId)
+                .collection("Devices")
+                .document(deviceId)
+                .collection("Machines")
+                .document(machineId);
+
+        try {
+
+            ApiFuture<DocumentSnapshot> future = machineRef.get();
+            DocumentSnapshot document = future.get();
+
+            if (document.exists()) {
+
+                Long currentTime = document.getLong("time");
+                if (currentTime == null) {
+                    currentTime = 0L;
+                }
+                long newTime = currentTime + time;
+                ApiFuture<WriteResult> updateFuture = machineRef.update("time", newTime);
+                updateFuture.get();
+
+
+                return "Time successfully updated to: " + newTime;
+            } else {
+                return "Machine document not found.";
+            }
+        } catch (ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt(); // Reset interrupt flag
+            return "Error updating time: " + e.getMessage();
+        }
+    }
 }
 
 

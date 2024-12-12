@@ -14,7 +14,7 @@ public interface DeviceRestApiInterface {
     @PostMapping("/turnOn")
     String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo);
 
-    @PostMapping("turnOff")
+    @PostMapping("/turnOff")
     String turnOffRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo);
 
     @GetMapping("/{deviceId}/reset")
@@ -29,4 +29,6 @@ public interface DeviceRestApiInterface {
     @GetMapping("/getMachine")
     Machine getMachine(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId);
 
+    @PostMapping("/increaseMachineTime")
+    String increaseMachineTime(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId, @RequestParam String time);
 }
