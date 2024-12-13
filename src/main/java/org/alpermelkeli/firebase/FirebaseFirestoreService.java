@@ -2,6 +2,7 @@ package org.alpermelkeli.firebase;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.google.protobuf.Api;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
 import org.alpermelkeli.model.State;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -187,18 +189,12 @@ public class FirebaseFirestoreService {
         /*Make selected machine active*/
         updates.put("active", active);
 
-        ApiFuture<WriteResult> writeResult = machineRef.update(updates);
+        machineRef.update(updates);
 
-        try {
-            System.out.println("Güncelleme zamanı: " + writeResult.get().getUpdateTime());
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Güncelleme sırasında hata oluştu: " + e.getMessage());
-        }
 
     }
 
-    public void refreshMachineTime(String companyId, String deviceId, String relayNo, int time){
+    public void refreshMachineTime(String companyId, String deviceId, String relayNo, long currenttime ,long time){
         DocumentReference machineRef = firestore
                 .collection("Company")
                 .document(companyId)
@@ -211,7 +207,7 @@ public class FirebaseFirestoreService {
         /*Make selected machine active*/
 
         updates.put("time", time);
-        updates.put("start", System.currentTimeMillis());
+        updates.put("start", currenttime);
         /*Update time and start*/
 
         ApiFuture<WriteResult> writeResult = machineRef.update(updates);
@@ -249,8 +245,7 @@ public class FirebaseFirestoreService {
         return result;
     }
 
-    public String increaseMachineTime(String companyId, String deviceId, String machineId, int time) {
-
+    public CompletableFuture<Map<String, Long>> increaseMachineTime(String companyId, String deviceId, String machineId, int time) {
         DocumentReference machineRef = firestore.collection("Company")
                 .document(companyId)
                 .collection("Devices")
@@ -258,30 +253,37 @@ public class FirebaseFirestoreService {
                 .collection("Machines")
                 .document(machineId);
 
-        try {
+        CompletableFuture<Map<String, Long>> futureResult = new CompletableFuture<>();
 
-            ApiFuture<DocumentSnapshot> future = machineRef.get();
-            DocumentSnapshot document = future.get();
+        machineRef.get().addListener(() -> {
+            try {
+                DocumentSnapshot document = machineRef.get().get();
 
-            if (document.exists()) {
+                if (document.exists()) {
+                    Long currentTime = document.getLong("time");
+                    Long startTime = document.getLong("start");
+                    if (currentTime == null) {
+                        currentTime = 0L;
+                    }
+                    long newTime = currentTime + time;
 
-                Long currentTime = document.getLong("time");
-                if (currentTime == null) {
-                    currentTime = 0L;
+                    machineRef.update("time", newTime).addListener(() -> {
+                        Map<String, Long> response = new HashMap<>();
+                        response.put("newTime", newTime);
+                        response.put("startTime", startTime);
+                        futureResult.complete(response);
+                    }, Runnable::run);
+
+                } else {
+                    futureResult.completeExceptionally(new Exception("Document does not exist"));
                 }
-                long newTime = currentTime + time;
-                ApiFuture<WriteResult> updateFuture = machineRef.update("time", newTime);
-                updateFuture.get();
-
-
-                return "Time successfully updated to: " + newTime;
-            } else {
-                return "Machine document not found.";
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
+                futureResult.completeExceptionally(e);
             }
-        } catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt(); // Reset interrupt flag
-            return "Error updating time: " + e.getMessage();
-        }
+        }, Runnable::run);
+
+        return futureResult;
     }
 }
 

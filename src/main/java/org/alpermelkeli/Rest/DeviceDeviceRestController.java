@@ -1,6 +1,7 @@
 package org.alpermelkeli.Rest;
 
 import org.alpermelkeli.MQTT.MQTTControllerService;
+import org.alpermelkeli.TimeController.DeviceTimeController;
 import org.alpermelkeli.firebase.FirebaseFirestoreService;
 import org.alpermelkeli.model.Device;
 import org.alpermelkeli.model.Machine;
@@ -19,17 +20,24 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
     private final MQTTControllerService mqttControllerService;
     private final FirebaseFirestoreService firebaseFirestoreService;
+    private final DeviceTimeController deviceTimeController;
     /*Service injections */
-    public DeviceDeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService) {
+    public DeviceDeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService, DeviceTimeController deviceTimeController) {
         this.firebaseFirestoreService = firebaseFirestoreService;
         this.mqttControllerService = mqttControllerService;
+        this.deviceTimeController = deviceTimeController;
     }
 
     @Override
     public String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo, @RequestParam String time) {
         mqttControllerService.sendTurnOnOffCommand(deviceId, relayNo, "ON");
         firebaseFirestoreService.refreshMachineStatus(companyId, deviceId, relayNo, true);
-        firebaseFirestoreService.refreshMachineTime(companyId, deviceId, relayNo, Integer.parseInt(time));
+        long currenttime = System.currentTimeMillis();
+        firebaseFirestoreService.refreshMachineTime(companyId, deviceId, relayNo, currenttime, Long.parseLong(time));
+        deviceTimeController.startWatchingDevice(companyId, deviceId, relayNo, currenttime, Long.parseLong(time), (cId, dId, mId) -> {
+            mqttControllerService.sendTurnOnOffCommand(dId, mId, "OFF");
+            firebaseFirestoreService.refreshMachineStatus(cId, dId, mId, false);
+        });
         return "Success";
     }
 
@@ -71,7 +79,30 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
 
     @Override
     public String increaseMachineTime(String companyId, String deviceId, String machineId, String time) {
-        return firebaseFirestoreService.increaseMachineTime(companyId, deviceId, machineId, Integer.parseInt(time));
+        if (companyId == null || companyId.isEmpty() || deviceId == null || deviceId.isEmpty() || machineId == null || machineId.isEmpty() || time == null || time.isEmpty()) {
+            throw new IllegalArgumentException("Geçersiz giriş parametreleri sağlandı.");
+        }
+
+        Map<String, Long> response;
+        try {
+            response = firebaseFirestoreService.increaseMachineTime(companyId, deviceId, machineId, Integer.parseInt(time)).get();
+        } catch (Exception e) {
+            throw new RuntimeException("Makine süresi artırılamadı: " + e.getMessage(), e);
+        }
+
+        deviceTimeController.startWatchingDevice(
+                companyId,
+                deviceId,
+                machineId,
+                response.get("startTime"),
+                response.get("newTime"),
+                (cId, dId, mId) -> {
+                    mqttControllerService.sendTurnOnOffCommand(dId, mId, "OFF");
+                    firebaseFirestoreService.refreshMachineStatus(cId, dId, mId, false);
+                }
+        );
+
+        return "Increased to " + response.get("time") + " From start " + response.get("start");
     }
 
 
