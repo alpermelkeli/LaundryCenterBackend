@@ -12,7 +12,7 @@ import java.util.Map;
 
 public interface DeviceRestApiInterface {
     @PostMapping("/turnOn")
-    String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo);
+    String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo, @RequestParam String time);
 
     @PostMapping("/turnOff")
     String turnOffRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo);

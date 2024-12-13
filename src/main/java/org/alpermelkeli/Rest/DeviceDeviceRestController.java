@@ -26,10 +26,10 @@ class DeviceDeviceRestController implements DeviceRestApiInterface {
     }
 
     @Override
-    public String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo) {
+    public String turnOnRelay(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String relayNo, @RequestParam String time) {
         mqttControllerService.sendTurnOnOffCommand(deviceId, relayNo, "ON");
         firebaseFirestoreService.refreshMachineStatus(companyId, deviceId, relayNo, true);
-
+        firebaseFirestoreService.refreshMachineTime(companyId, deviceId, relayNo, Integer.parseInt(time));
         return "Success";
     }
 

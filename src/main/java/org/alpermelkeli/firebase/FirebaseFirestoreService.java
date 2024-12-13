@@ -84,7 +84,7 @@ public class FirebaseFirestoreService {
                     Device device = new Device();
                     device.setId(deviceDoc.getId());
 
-                    String stateValue = deviceDoc.getString("state");
+                    String stateValue = deviceDoc.getString("status");
                     device.setState(stateValue != null && stateValue.equalsIgnoreCase("connected")
                             ? State.CONNECTED
                             : State.DISCONNECTED);
@@ -183,6 +183,8 @@ public class FirebaseFirestoreService {
                 .document(relayNo);
 
         Map<String, Object> updates = new HashMap<>();
+
+        /*Make selected machine active*/
         updates.put("active", active);
 
         ApiFuture<WriteResult> writeResult = machineRef.update(updates);
@@ -194,6 +196,32 @@ public class FirebaseFirestoreService {
             System.err.println("Güncelleme sırasında hata oluştu: " + e.getMessage());
         }
 
+    }
+
+    public void refreshMachineTime(String companyId, String deviceId, String relayNo, int time){
+        DocumentReference machineRef = firestore
+                .collection("Company")
+                .document(companyId)
+                .collection("Devices")
+                .document(deviceId)
+                .collection("Machines")
+                .document(relayNo);
+
+        Map<String, Object> updates = new HashMap<>();
+        /*Make selected machine active*/
+
+        updates.put("time", time);
+        updates.put("start", System.currentTimeMillis());
+        /*Update time and start*/
+
+        ApiFuture<WriteResult> writeResult = machineRef.update(updates);
+
+        try {
+            System.out.println("Güncelleme zamanı: " + writeResult.get().getUpdateTime());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Güncelleme sırasında hata oluştu: " + e.getMessage());
+        }
     }
 
     public Map<String, Double> getUserBalance(String userId) {
