@@ -198,7 +198,7 @@ public class FirebaseFirestoreService {
 
     }
 
-    public void refreshMachineTime(String companyId, String deviceId, String relayNo, long currenttime ,long time){
+    public void refreshMachineTime(String companyId, String deviceId, String relayNo, long currentTimeMillis ,long time){
         DocumentReference machineRef = firestore
                 .collection("Company")
                 .document(companyId)
@@ -211,7 +211,7 @@ public class FirebaseFirestoreService {
         /*Make selected machine active*/
 
         updates.put("time", time);
-        updates.put("start", currenttime);
+        updates.put("start", currentTimeMillis);
         /*Update time and start*/
 
         ApiFuture<WriteResult> writeResult = machineRef.update(updates);

@@ -40,13 +40,13 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @RequestMapping("/api/devices")
-class DeviceDeviceRestController implements DeviceRestApiInterface {
+class DeviceRestController implements DeviceRestApiInterface {
 
     private final MQTTControllerService mqttControllerService;
     private final FirebaseFirestoreService firebaseFirestoreService;
     private final DeviceTimeController deviceTimeController;
     /*Service injections */
-    public DeviceDeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService, DeviceTimeController deviceTimeController) {
+    public DeviceRestController(FirebaseFirestoreService firebaseFirestoreService, MQTTControllerService mqttControllerService, DeviceTimeController deviceTimeController) {
         this.firebaseFirestoreService = firebaseFirestoreService;
         this.mqttControllerService = mqttControllerService;
         this.deviceTimeController = deviceTimeController;
