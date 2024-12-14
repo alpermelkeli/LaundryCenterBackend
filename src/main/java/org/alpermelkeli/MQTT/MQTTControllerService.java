@@ -13,6 +13,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * MQTTControllerService is responsible for managing the MQTT interactions
+ * within the application. It establishes and maintains a connection to the MQTT broker,
+ * subscribes to relevant topics, processes received messages, and provides functionality
+ * to send commands to specific devices.
+ *
+ * The service supports automatic reconnection in case the connection to the broker is lost
+ * and manages device statuses with the help of the FirebaseFirestoreService.
+ *
+ * The main responsibilities of the service include:
+ * - Establishing and maintaining a connection to the MQTT broker.
+ * - Subscribing to topics to listen for messages and device status updates.
+ * - Processing received MQTT messages and delegating actions to FirebaseFirestoreService.
+ * - Sending control commands to devices via MQTT topics.
+ * - Automatically resubscribing to topics after reconnection.
+ */
 @Service
 public class MQTTControllerService {
     private final FirebaseFirestoreService firebaseFirestoreService;

@@ -15,6 +15,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Service for interacting with the Firebase Firestore database. Provides methods to
+ * retrieve and manage data related to users, companies, devices, and machines.
+ */
 @Service
 public class FirebaseFirestoreService {
 
@@ -245,6 +249,7 @@ public class FirebaseFirestoreService {
         return result;
     }
 
+    /*TODO check this function return type etc..*/
     public CompletableFuture<Map<String, Long>> increaseMachineTime(String companyId, String deviceId, String machineId, int time) {
         DocumentReference machineRef = firestore.collection("Company")
                 .document(companyId)
@@ -284,6 +289,29 @@ public class FirebaseFirestoreService {
         }, Runnable::run);
 
         return futureResult;
+    }
+
+    public double getCompanyPrice(String companyId){
+        try {
+            ApiFuture<DocumentSnapshot> companyDoc = firestore.collection("Company")
+                    .document(companyId)
+                    .get();
+
+            DocumentSnapshot document = companyDoc.get();
+
+            if (document.exists()) {
+
+                return document.getDouble("price") != null ? document.getDouble("price") : 0.0;
+            }
+            else {
+                return 0.0;
+            }
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return 0.0;
+        }
     }
 }
 

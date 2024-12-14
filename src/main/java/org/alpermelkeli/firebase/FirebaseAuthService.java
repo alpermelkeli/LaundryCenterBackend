@@ -11,6 +11,10 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * The FirebaseAuthService class provides methods to interact with Firebase Authentication.
+ * It allows user authentication and account creation using Firebase Authentication API.
+ */
 @Service
 public class FirebaseAuthService {
 

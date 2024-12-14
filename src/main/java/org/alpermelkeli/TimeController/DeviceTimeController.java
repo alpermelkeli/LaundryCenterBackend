@@ -13,21 +13,12 @@ public class DeviceTimeController {
 
     private final Map<String, ScheduledExecutorService> deviceTimers = new ConcurrentHashMap<>();
 
-    /**
-     * Makinenin start ve time alanlarına göre zamanlayıcı başlatır.
-     *
-     * @param companyId Şirket ID'si
-     * @param deviceId Cihaz ID'si
-     * @param machineId Makine ID'si
-     * @param startTimeInMillis Makinenin başlatıldığı zaman (milisaniye cinsinden)
-     * @param durationInMillis Makinenin çalışması gereken süre (saniye cinsinden)
-     * @param callback Süre dolduğunda çalışacak callback
-     */
+
     public void startWatchingDevice(String companyId, String deviceId, String machineId, long startTimeInMillis, long durationInMillis, OnTimeIsDoneCallback callback) {
-        stopWatchingDevice(deviceId); // Aynı cihaz için var olan zamanlayıcıyı durdur
+        stopWatchingDevice(deviceId+machineId);
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        deviceTimers.put(deviceId, scheduler);
+        deviceTimers.put(deviceId+machineId, scheduler);
 
         long currentTimeInMillis = System.currentTimeMillis();
         long remainingTimeInMillis = (startTimeInMillis + durationInMillis) - currentTimeInMillis;
@@ -45,20 +36,16 @@ public class DeviceTimeController {
         }
     }
 
-    /**
-     * Belirtilen cihaz için zamanlayıcıyı durdurur.
-     */
-    public void stopWatchingDevice(String deviceId) {
-        ScheduledExecutorService scheduler = deviceTimers.remove(deviceId);
+
+    public void stopWatchingDevice(String deviceId_machineId) {
+        ScheduledExecutorService scheduler = deviceTimers.remove(deviceId_machineId);
         if (scheduler != null) {
             scheduler.shutdownNow();
-            System.out.println("Device " + deviceId + " tracking stopped.");
+            System.out.println("Device " + deviceId_machineId + " tracking stopped.");
         }
     }
 
-    /**
-     * Süre dolduğunda çalışacak callback arayüzü.
-     */
+
     public interface OnTimeIsDoneCallback {
         void onTimeIsDone(String companyId, String deviceId, String machineId);
     }

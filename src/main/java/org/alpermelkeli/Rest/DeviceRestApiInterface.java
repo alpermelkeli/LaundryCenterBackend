@@ -13,7 +13,6 @@ import java.util.Map;
 /**
  * DeviceRestApiInterface provides a set of REST API endpoints for managing and interacting with devices
  * and their respective components, such as relays and machines.
- *
  * It defines methods to perform operations like turning on/off relays, resetting devices, fetching device and machine details,
  * and updating machine time using HTTP POST and GET requests.
  */
@@ -40,4 +39,7 @@ public interface DeviceRestApiInterface {
 
     @PostMapping("/increaseMachineTime")
     String increaseMachineTime(@RequestParam String companyId, @RequestParam String deviceId, @RequestParam String machineId, @RequestParam String time);
+
+    @GetMapping("/getPrice")
+    double getPrice(@RequestParam String companyId);
 }
